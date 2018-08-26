@@ -6,7 +6,7 @@ defmodule PBFParser.Helpers do
   def extract_tags(stringtable, keys, values) when is_map(stringtable) do
     keys
     |> Stream.with_index()
-    |> Stream.map(fn {index, keyID} ->
+    |> Stream.map(fn {keyID, index} ->
       key =
         case stringtable do
           %{^keyID => value} -> value

@@ -26,18 +26,7 @@ defmodule PBFParser.Reader do
         {:ok, blob_bytes} = :file.read(file, header.datasize)
         blob = Proto.File.Blob.decode(blob_bytes)
 
-        zlib_uncompressed = :zlib.uncompress(blob.zlib_data)
-
-        data_block =
-          case header.type do
-            "OSMHeader" ->
-              Proto.Osm.HeaderBlock.decode(zlib_uncompressed)
-
-            "OSMData" ->
-              Proto.Osm.PrimitiveBlock.decode(zlib_uncompressed)
-          end
-
-        {[data_block], file}
+        {[{header.type, blob.zlib_data}], file}
     end
   end
 end
