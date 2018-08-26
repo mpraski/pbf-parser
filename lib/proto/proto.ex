@@ -1,7 +1,7 @@
-defmodule PBFParser.File do
+defmodule Proto.File do
   use Protobuf, from: Path.expand("./fileformat.proto", __DIR__)
 end
 
-defmodule PBFParser.Osm do
+defmodule Proto.Osm do
   use Protobuf, from: Path.expand("./osmformat.proto", __DIR__)
 end
