@@ -1,5 +1,6 @@
 %{
   "exprotobuf": {:hex, :exprotobuf, "1.2.9", "f3cac1b0d0444da3c72cdfe80e394d721275dc80b1d7703ead9dad9267e93822", [:mix], [{:gpb, "~> 3.24", [hex: :gpb, repo: "hexpm", optional: false]}], "hexpm"},
+  "flow": {:hex, :flow, "0.14.2", "84687153dcd10e321a2b09b5d1db9511ed704337a553a46e8b0758fde0b7e75c", [:mix], [{:gen_stage, "~> 0.14.0", [hex: :gen_stage, repo: "hexpm", optional: false]}], "hexpm"},
   "gen_stage": {:hex, :gen_stage, "0.14.0", "65ae78509f85b59d360690ce3378d5096c3130a0694bab95b0c4ae66f3008fad", [:mix], [], "hexpm"},
   "gpb": {:hex, :gpb, "3.28.1", "6849b2f0004dc4e7644f4f67e7cdd18e893f0ab87eb7ad82b9cb1483ce60eed0", [:make, :rebar], [], "hexpm"},
 }

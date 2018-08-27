@@ -1,18 +1,4 @@
 defmodule PBFParser do
-  @moduledoc """
-  Testing the process:
-
-  PBFParser.start_parsing("test.osm.pbf")
-
-  PBFParser.Reader.stream("test.osm.pbf") |> Stream.drop(1) |> Stream.map(&PBFParser.Decoder.decompress/1) |> Stream.each(fn item -> IO.inspect item.stringtable.s end) |> Stream.run()
-
-  PBFParser.Reader.stream("test.osm.pbf") |> Stream.drop(1) |> Stream.map(&PBFParser.Decoder.decompress/1) |> Stream.each(&IO.inspect/1) |> Stream.run()
-
-  PBFParser.Reader.stream("test.osm.pbf") |> Stream.take(1) |> Stream.map(&PBFParser.Decoder.decompress/1) |> Stream.each(&IO.inspect/1) |> Stream.run()
-
-  PBFParser.Reader.stream("test.osm.pbf") |> Stream.drop(1) |> Stream.map(&PBFParser.Decoder.decompress/1) |> Stream.map(&PBFParser.Decoder.decode_block/1) |> Stream.each(&IO.inspect/1) |> Stream.run()
-  """
-
   def test do
     PBFParser.Reader.stream("test.osm.pbf")
     |> Stream.drop(1)
@@ -20,5 +6,21 @@ defmodule PBFParser do
     |> Stream.map(&PBFParser.Decoder.decode_block/1)
     |> Stream.each(&IO.inspect/1)
     |> Stream.run()
+  end
+
+  def test_flow do
+    PBFParser.Reader.stream("test.osm.pbf")
+    |> Stream.drop(1)
+    |> Flow.from_enumerable(max_demand: 100)
+    |> Flow.partition(max_demand: 5, stages: 10)
+    |> Flow.map(&PBFParser.Decoder.decompress_block/1)
+    |> Flow.partition(max_demand: 5, stages: 8)
+    |> Flow.map(&PBFParser.Decoder.decode_block/1)
+    |> Flow.partition(window: Flow.Window.count(10))
+    |> Flow.reduce(fn -> [] end, fn batch, total -> total ++ batch end)
+    |> Flow.emit(:state)
+    |> Flow.partition(max_demand: 20, stages: 2)
+    |> Flow.each(fn item -> IO.inspect(length(item)) end)
+    |> Flow.run()
   end
 end
