@@ -4,7 +4,7 @@ defmodule PBFParser.Reader do
   end
 
   defp open_file(path) do
-    {:ok, file} = :file.open(path, [:raw, :binary, :read, {:read_ahead, 65536}])
+    {:ok, file} = :file.open(path, [:raw, :binary, :read])
     file
   end
 
@@ -26,7 +26,7 @@ defmodule PBFParser.Reader do
         {:ok, blob_bytes} = :file.read(file, header.datasize)
         blob = Proto.File.Blob.decode(blob_bytes)
 
-        {[{header.type, blob.zlib_data}], file}
+        {[blob.zlib_data], file}
     end
   end
 end

@@ -12,4 +12,13 @@ defmodule PBFParser do
 
   PBFParser.Reader.stream("test.osm.pbf") |> Stream.drop(1) |> Stream.map(&PBFParser.Decoder.decompress/1) |> Stream.map(&PBFParser.Decoder.decode_block/1) |> Stream.each(&IO.inspect/1) |> Stream.run()
   """
+
+  def test do
+    PBFParser.Reader.stream("test.osm.pbf")
+    |> Stream.drop(1)
+    |> Stream.map(&PBFParser.Decoder.decompress_block/1)
+    |> Stream.map(&PBFParser.Decoder.decode_block/1)
+    |> Stream.each(&IO.inspect/1)
+    |> Stream.run()
+  end
 end
