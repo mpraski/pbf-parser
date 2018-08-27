@@ -26,11 +26,12 @@ defmodule PBFParser.Decoder do
           ways: ways
         }
       ) do
-    []
-    |> decode_dense(block, dense)
-    |> decode_nodes(block, nodes)
-    |> decode_relations(block, relations)
-    |> decode_ways(block, ways)
+    cond do
+      dense -> decode_dense(block, dense)
+      length(nodes) > 0 -> decode_nodes(block, nodes)
+      length(relations) > 0 -> decode_relations(block, relations)
+      length(ways) > 0 -> decode_ways(block, ways)
+    end
   end
 
   def decompress_block(data) do
@@ -42,7 +43,6 @@ defmodule PBFParser.Decoder do
   end
 
   defp decode_dense(
-         acc,
          %Proto.Osm.PrimitiveBlock{
            date_granularity: date_granularity,
            granularity: granularity,
@@ -86,7 +86,7 @@ defmodule PBFParser.Decoder do
     )
     |> Stream.zip()
     |> Enum.reduce(
-      {acc, 0, 0, 0, 0, 0, 0, 0},
+      {[], 0, 0, 0, 0, 0, 0, 0},
       fn {id, lat, lon, tagmap, changeset, timestamp, uid, user_sid, version, visible},
          {acc, ida, lata, lona, timestampa, changeseta, uida, user_sida} ->
         id = ida + id
@@ -146,40 +146,51 @@ defmodule PBFParser.Decoder do
     |> elem(0)
   end
 
-  defp decode_nodes(acc, block, nodes) do
-    acc
+  defp decode_nodes(
+         %Proto.Osm.PrimitiveBlock{
+           date_granularity: date_granularity,
+           granularity: granularity,
+           lat_offset: lat_offset,
+           lon_offset: lon_offset,
+           stringtable: stringtable
+         },
+         nodes
+       ) do
+    nodes
+    |> Enum.map(fn %Proto.Osm.Node{
+                     id: id,
+                     keys: keys,
+                     vals: vals,
+                     lat: lat,
+                     lon: lon
+                   } ->
+      %Data.Node{
+        id: id,
+        latitude: 1.0e-9 * (lat_offset + granularity * lat),
+        longitude: 1.0e-9 * (lon_offset + granularity * lon),
+        tags: extract_tags(stringtable, keys, vals |> :array.from_list())
+      }
+    end)
   end
 
-  defp decode_relations(acc, block, relations) do
-    acc
+  defp decode_relations(block, relations) do
+    []
   end
 
-  defp decode_ways(acc, block, ways) do
-    acc
+  defp decode_ways(block, ways) do
+    []
   end
 
   defp extend(list, base) do
     list |> Stream.concat(Stream.repeatedly(fn -> base end))
   end
 
-  def extract_tags(stringtable, keys, values) when is_map(stringtable) do
+  def extract_tags(stringtable, keys, vals) do
     keys
     |> Stream.with_index()
     |> Stream.map(fn {keyID, index} ->
-      key =
-        case stringtable do
-          %{^keyID => value} -> value
-        end
-
-      valueID =
-        case values do
-          %{^index => value} -> value
-        end
-
-      value =
-        case stringtable do
-          %{^valueID => value} -> value
-        end
+      key = :array.get(keyID, stringtable)
+      value = :array.get(:array.get(index, vals), stringtable)
 
       {key, value}
     end)
