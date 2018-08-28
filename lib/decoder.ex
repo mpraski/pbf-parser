@@ -170,8 +170,29 @@ defmodule PBFParser.Decoder do
     end)
   end
 
-  defp decode_relations(block, relations) do
-    []
+  defp decode_relations(
+         %Proto.Osm.PrimitiveBlock{
+           date_granularity: date_granularity,
+           stringtable: stringtable
+         },
+         relations
+       ) do
+    relations
+    |> Enum.map(fn %Proto.Osm.Relation{
+                     id: id,
+                     keys: keys,
+                     vals: vals,
+                     info: info,
+                     roles_sid: roles_sid,
+                     memids: memids,
+                     types: types
+                   } ->
+      %Data.Relation{
+        id: id,
+        tags: extract_tags(stringtable, keys, vals),
+        info: extract_info(stringtable, date_granularity, info)
+      }
+    end)
   end
 
   defp decode_ways(
@@ -220,7 +241,7 @@ defmodule PBFParser.Decoder do
       uid: uid,
       user: get_user(user_sid, stringtable),
       version: version,
-      visible: visible
+      visible: if(visible != nil, do: visible, else: true)
     }
   end
 
@@ -229,9 +250,11 @@ defmodule PBFParser.Decoder do
   end
 
   defp get_date(timestamp, date_granularity) do
-    case DateTime.from_unix(timestamp * date_granularity, :millisecond) do
-      {:ok, date} -> date
-      {:error, _reason} -> nil
+    if timestamp do
+      case DateTime.from_unix(timestamp * date_granularity, :millisecond) do
+        {:ok, date} -> date
+        {:error, _reason} -> nil
+      end
     end
   end
 
