@@ -1,4 +1,13 @@
 defmodule PBFParser.Decoder do
+  @empty_dense_info %Proto.Osm.DenseInfo{
+    changeset: [],
+    timestamp: [],
+    uid: [],
+    user_sid: [],
+    version: [],
+    visible: []
+  }
+
   def decode_block(
         %Proto.Osm.PrimitiveBlock{
           primitivegroup: groups,
@@ -43,6 +52,18 @@ defmodule PBFParser.Decoder do
   end
 
   defp decode_dense(
+         block,
+         %Proto.Osm.DenseNodes{
+           denseinfo: nil
+         } = dense
+       ) do
+    decode_dense(block, %Proto.Osm.DenseNodes{
+      dense
+      | denseinfo: @empty_dense_info
+    })
+  end
+
+  defp decode_dense(
          %Proto.Osm.PrimitiveBlock{
            date_granularity: date_granularity,
            granularity: granularity,
@@ -82,7 +103,7 @@ defmodule PBFParser.Decoder do
         versions,
         visibles
       ]
-      |> Enum.map(&(&1 |> extend(nil)))
+      |> Enum.map(fn set -> set |> extend(nil) end)
     )
     |> Stream.zip()
     |> Enum.reduce(
@@ -93,25 +114,10 @@ defmodule PBFParser.Decoder do
         lat = lata + lat
         lon = lona + lon
 
-        timestamp =
-          if timestamp do
-            timestampa + timestamp
-          end
-
-        changeset =
-          if changeset do
-            changeseta + changeset
-          end
-
-        uid =
-          if uid do
-            uida + uid
-          end
-
-        user_sid =
-          if user_sid do
-            user_sida + user_sid
-          end
+        changeset = if changeset, do: changeseta + changeset
+        timestamp = if timestamp, do: timestampa + timestamp
+        uid = if uid, do: uida + uid
+        user_sid = if user_sid, do: user_sida + user_sid
 
         {[
            %Data.Node{
