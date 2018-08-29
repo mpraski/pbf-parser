@@ -86,7 +86,7 @@ defmodule PBFParser.Decoder do
            }
          }
        ) do
-    tags = extract_dense_tags(stringtable, keys_vals)
+    tags = stringtable |> extract_dense_tags(keys_vals)
 
     Enum.concat(
       [
@@ -103,7 +103,7 @@ defmodule PBFParser.Decoder do
         versions,
         visibles
       ]
-      |> Enum.map(fn set -> set |> extend(nil) end)
+      |> Enum.map(fn set -> set |> extend() end)
     )
     |> Stream.zip()
     |> Enum.reduce(
@@ -245,7 +245,7 @@ defmodule PBFParser.Decoder do
     }
   end
 
-  defp extend(list, base) do
+  defp extend(list, base \\ nil) do
     list |> Stream.concat(Stream.repeatedly(fn -> base end))
   end
 
@@ -279,11 +279,7 @@ defmodule PBFParser.Decoder do
   end
 
   defp extract_tags(stringtable, keys, vals) do
-    [
-      keys,
-      vals
-    ]
-    |> Stream.zip()
+    Stream.zip(keys, vals)
     |> Stream.map(fn {k, v} ->
       key = :array.get(k, stringtable)
       value = :array.get(v, stringtable)
@@ -294,32 +290,33 @@ defmodule PBFParser.Decoder do
   end
 
   defp extract_dense_tags(stringtable, keys_vals) do
-    stringtable |> extract_dense_tags(keys_vals, []) |> Enum.reverse()
+    Stream.resource(
+      fn -> keys_vals end,
+      fn
+        [] ->
+          {:halt, nil}
+
+        [0 | rest] ->
+          {[nil], rest}
+
+        [k | [v | rest]] ->
+          key = :array.get(k, stringtable)
+          value = :array.get(v, stringtable)
+
+          stringtable |> collect_tags_for_node(%{key => value}, rest)
+      end,
+      fn _ -> nil end
+    )
   end
 
-  defp extract_dense_tags(_stringtable, [], acc) do
-    acc
+  defp collect_tags_for_node(_stringtable, tagmap, [0 | rest]) do
+    {[tagmap], rest}
   end
 
-  defp extract_dense_tags(stringtable, [0 | rest], acc) do
-    stringtable |> extract_dense_tags(rest, [nil | acc])
-  end
-
-  defp extract_dense_tags(stringtable, [k | [v | rest]], acc) do
+  defp collect_tags_for_node(stringtable, tagmap, [k | [v | rest]]) do
     key = :array.get(k, stringtable)
     value = :array.get(v, stringtable)
 
-    stringtable |> extract_dense_tags_for_node(rest, %{key => value}, acc)
-  end
-
-  defp extract_dense_tags_for_node(stringtable, [0 | rest], node, acc) do
-    stringtable |> extract_dense_tags(rest, [node | acc])
-  end
-
-  defp extract_dense_tags_for_node(stringtable, [k | [v | rest]], node, acc) do
-    key = :array.get(k, stringtable)
-    value = :array.get(v, stringtable)
-
-    stringtable |> extract_dense_tags_for_node(rest, node |> Map.put(key, value), acc)
+    stringtable |> collect_tags_for_node(tagmap |> Map.put(key, value), rest)
   end
 end

@@ -16,7 +16,7 @@ defmodule PBFParser do
     |> Flow.map(&PBFParser.Decoder.decompress_block/1)
     |> Flow.partition(max_demand: 5, stages: 8)
     |> Flow.map(&PBFParser.Decoder.decode_block/1)
-    |> Flow.partition(window: Flow.Window.count(10))
+    |> Flow.partition(window: Flow.Window.count(20))
     |> Flow.reduce(fn -> [] end, fn batch, total -> [batch | total] end)
     |> Flow.emit(:state)
     |> Flow.partition(max_demand: 20, stages: 2)
