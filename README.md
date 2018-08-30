@@ -1,6 +1,6 @@
-# PBFParser
+# PBF Parser
 
-Elixir parser for OpenStreetMap PBF format described in [PBF file specification](https://wiki.openstreetmap.org/wiki/PBF_Format#Encoding_OSM_entities_into_fileblocks).
+Elixir parser and decoder for OpenStreetMap PBF format described in [PBF file specification](https://wiki.openstreetmap.org/wiki/PBF_Format#Encoding_OSM_entities_into_fileblocks).
 
 ## Examples
 
