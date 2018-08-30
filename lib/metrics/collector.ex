@@ -19,7 +19,7 @@ defmodule Metrics.Collector do
     files =
       scopes
       |> Enum.map(fn scope ->
-        {scope, File.open!("progress-#{scope}.log", [:write])}
+        {scope, File.open!(Path.expand("../../metrics/progress-#{scope}.log", __DIR__), [:write])}
       end)
 
     counts = scopes |> Enum.map(fn scope -> {scope, 0} end)

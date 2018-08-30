@@ -17,5 +17,4 @@ set xrange [0:15000]
 
 plot  "progress-read.log"       with steps   ls 1 title "Read",\
       "progress-decompress.log" with steps   ls 2 title "Decompress",\
-      "progress-decode.log"     with steps   ls 3 title "Decode",\
-      "progress-collect.log"    with steps   ls 4 title "Collect"
+      "progress-decode.log"     with steps   ls 3 title "Decode"

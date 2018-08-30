@@ -27,3 +27,6 @@ pbf_parser-*.tar
 
 # Test .pbf files (waay to large)
 *.pbf
+
+# Collected metrics
+/metrics/progress-*
