@@ -26,6 +26,8 @@ defmodule PBFParser.Reader do
         {:ok, blob_bytes} = :file.read(file, header.datasize)
         blob = Proto.File.Blob.decode(blob_bytes)
 
+        Metrics.Collector.incr(:read)
+
         {[blob.zlib_data], file}
     end
   end

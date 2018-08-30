@@ -14,16 +14,21 @@ defmodule PBFParser.Decoder do
           stringtable: %Proto.Osm.StringTable{s: stringtable}
         } = primitive_block
       ) do
-    groups
-    |> Enum.flat_map(fn group ->
-      decode_group(
-        %Proto.Osm.PrimitiveBlock{
-          primitive_block
-          | stringtable: stringtable |> :array.from_list()
-        },
-        group
-      )
-    end)
+    decoded =
+      groups
+      |> Enum.flat_map(fn group ->
+        decode_group(
+          %Proto.Osm.PrimitiveBlock{
+            primitive_block
+            | stringtable: stringtable |> :array.from_list()
+          },
+          group
+        )
+      end)
+
+    Metrics.Collector.incr(:decode)
+
+    decoded
   end
 
   def decode_group(
@@ -44,7 +49,9 @@ defmodule PBFParser.Decoder do
   end
 
   def decompress_block(data) do
-    Proto.Osm.PrimitiveBlock.decode(:zlib.uncompress(data))
+    decomp = Proto.Osm.PrimitiveBlock.decode(:zlib.uncompress(data))
+    Metrics.Collector.incr(:decompress)
+    decomp
   end
 
   def decompress_header(data) do
