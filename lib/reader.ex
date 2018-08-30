@@ -21,14 +21,12 @@ defmodule PBFParser.Reader do
         header_size = header_size_bytes |> :binary.decode_unsigned()
 
         {:ok, header_bytes} = :file.read(file, header_size)
-        header = Proto.File.BlobHeader.decode(header_bytes)
+        %{datasize: datasize} = Proto.File.BlobHeader.decode(header_bytes)
 
-        {:ok, blob_bytes} = :file.read(file, header.datasize)
-        blob = Proto.File.Blob.decode(blob_bytes)
+        {:ok, blob_bytes} = :file.read(file, datasize)
+        %{zlib_data: zlib_data} = Proto.File.Blob.decode(blob_bytes)
 
-        Metrics.Collector.incr(:read)
-
-        {[blob.zlib_data], file}
+        {[zlib_data], file}
     end
   end
 end

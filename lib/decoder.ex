@@ -14,21 +14,16 @@ defmodule PBFParser.Decoder do
           stringtable: %Proto.Osm.StringTable{s: stringtable}
         } = primitive_block
       ) do
-    decoded =
-      groups
-      |> Enum.flat_map(fn group ->
-        decode_group(
-          %Proto.Osm.PrimitiveBlock{
-            primitive_block
-            | stringtable: stringtable |> :array.from_list()
-          },
-          group
-        )
-      end)
-
-    Metrics.Collector.incr(:decode)
-
-    decoded
+    groups
+    |> Enum.flat_map(fn group ->
+      decode_group(
+        %Proto.Osm.PrimitiveBlock{
+          primitive_block
+          | stringtable: stringtable |> :array.from_list()
+        },
+        group
+      )
+    end)
   end
 
   def decode_group(
@@ -49,9 +44,7 @@ defmodule PBFParser.Decoder do
   end
 
   def decompress_block(data) do
-    decomp = Proto.Osm.PrimitiveBlock.decode(:zlib.uncompress(data))
-    Metrics.Collector.incr(:decompress)
-    decomp
+    Proto.Osm.PrimitiveBlock.decode(:zlib.uncompress(data))
   end
 
   def decompress_header(data) do
@@ -196,6 +189,7 @@ defmodule PBFParser.Decoder do
                    } ->
       %Data.Relation{
         id: id,
+        members: extract_members(stringtable, roles_sid, memids, types),
         tags: extract_tags(stringtable, keys, vals),
         info: extract_info(stringtable, date_granularity, info)
       }
@@ -226,9 +220,35 @@ defmodule PBFParser.Decoder do
     end)
   end
 
-  defp extract_info(_, _, nil) do
-    nil
+  #######################################
+  # Stream specified base element after #
+  # traversing a list                   #
+  #######################################
+
+  defp extend(list, base \\ nil) do
+    list |> Stream.concat(Stream.repeatedly(fn -> base end))
   end
+
+  defp get_date(timestamp, date_granularity) do
+    if timestamp do
+      case DateTime.from_unix(timestamp * date_granularity, :millisecond) do
+        {:ok, date} -> date
+        {:error, _reason} -> nil
+      end
+    end
+  end
+
+  defp get_user(user_sid, stringtable) do
+    if user_sid do
+      :array.get(user_sid, stringtable)
+    end
+  end
+
+  ##################################
+  # Extract common data structures #
+  ##################################
+
+  defp extract_info(_, _, nil), do: nil
 
   defp extract_info(
          stringtable,
@@ -252,23 +272,29 @@ defmodule PBFParser.Decoder do
     }
   end
 
-  defp extend(list, base \\ nil) do
-    list |> Stream.concat(Stream.repeatedly(fn -> base end))
-  end
+  defp extract_members(strintable, roles_sids, memids, types) do
+    [
+      roles_sids,
+      memids,
+      types
+    ]
+    |> Stream.zip()
+    |> Enum.reduce(
+      {[], 0},
+      fn {roles_sid, memid, type}, {acc, memida} ->
+        memid = memid + memida
 
-  defp get_date(timestamp, date_granularity) do
-    if timestamp do
-      case DateTime.from_unix(timestamp * date_granularity, :millisecond) do
-        {:ok, date} -> date
-        {:error, _reason} -> nil
+        {[
+           %Data.Member{
+             id: memid,
+             type: type,
+             role: :array.get(roles_sid, strintable)
+           }
+           | acc
+         ], memid}
       end
-    end
-  end
-
-  defp get_user(user_sid, stringtable) do
-    if user_sid do
-      :array.get(user_sid, stringtable)
-    end
+    )
+    |> elem(0)
   end
 
   defp extract_refs(refs) do
