@@ -29,4 +29,4 @@ pbf_parser-*.tar
 *.pbf
 
 # Collected metrics
-/metrics/progress-*
+/metrics/progress*

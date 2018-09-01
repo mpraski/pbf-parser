@@ -1,7 +1,7 @@
 # plot.gp
 # output to png with decend font and image size
 set terminal png font "Arial,10" size 700,500
-set output "progress.png"
+set output "metrics/progress.png"
 
 set title "Elixir Flow processing progress over time"
 set xlabel "Time (ms)"
@@ -15,6 +15,6 @@ set xrange [0:15000]
 # plot series (see below for explanation)
 # plot [file] with [line type] ls [line style id] [title ...  | notitle]
 
-plot  "progress-read.log"       with steps   ls 1 title "Read",\
-      "progress-decompress.log" with steps   ls 2 title "Decompress",\
-      "progress-decode.log"     with steps   ls 3 title "Decode"
+plot  "metrics/progress-read.log"       with steps   ls 1 title "Read",\
+      "metrics/progress-decompress.log" with steps   ls 2 title "Decompress",\
+      "metrics/progress-decode.log"     with steps   ls 3 title "Decode"

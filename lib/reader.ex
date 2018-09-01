@@ -4,7 +4,7 @@ defmodule PBFParser.Reader do
   end
 
   defp open_file(path) do
-    {:ok, file} = :file.open(path, [:raw, :binary, :read])
+    {:ok, file} = :file.open(path, [:raw, :binary, :read, {:read_ahead, 100_000}])
     file
   end
 

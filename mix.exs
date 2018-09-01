@@ -24,7 +24,6 @@ defmodule PBFParser.MixProject do
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       {:exprotobuf, "~> 1.2"},
-      {:gen_stage, "~> 0.14.0"},
       {:flow, "~> 0.14.2"}
     ]
   end

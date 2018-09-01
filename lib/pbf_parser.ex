@@ -28,13 +28,6 @@ defmodule PBFParser do
   def test_flow_with_metrics do
     Metrics.Collector.start_link([:read, :decompress, :decode])
 
-    specs = [
-      {
-        {PBFParser.Decompressor, []},
-        []
-      }
-    ]
-
     PBFParser.stream_metric("test.osm.pbf")
     |> Stream.drop(1)
     |> Stream.take(1_000)
