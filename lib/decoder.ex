@@ -5,16 +5,16 @@ defmodule PBFParser.Decoder do
   """
 
   alias PBFParser.Proto.OsmFormat.{
-    PrimitiveBlock,
-    HeaderBlock,
-    PrimitiveGroup,
-    StringTable,
-    DenseNodes,
     DenseInfo,
+    DenseNodes,
+    HeaderBlock,
+    Info,
     Node,
+    PrimitiveBlock,
+    PrimitiveGroup,
     Relation,
-    Way,
-    Info
+    StringTable,
+    Way
   }
 
   @empty_dense_info %DenseInfo{
