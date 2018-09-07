@@ -1,5 +1,23 @@
 defmodule PBFParser.Decoder do
-  @empty_dense_info %Proto.Osm.DenseInfo{
+  @moduledoc """
+  This module provides function for decoding block data into appropriate
+  structs representing OSM entities (Nodes, relations and ways).
+  """
+
+  alias PBFParser.Proto.OsmFormat.{
+    PrimitiveBlock,
+    HeaderBlock,
+    PrimitiveGroup,
+    StringTable,
+    DenseNodes,
+    DenseInfo,
+    Node,
+    Relation,
+    Way,
+    Info
+  }
+
+  @empty_dense_info %DenseInfo{
     changeset: [],
     timestamp: [],
     uid: [],
@@ -8,16 +26,24 @@ defmodule PBFParser.Decoder do
     visible: []
   }
 
+  def decompress_block(data) do
+    PrimitiveBlock.decode(:zlib.uncompress(data))
+  end
+
+  def decompress_header(data) do
+    HeaderBlock.decode(:zlib.uncompress(data))
+  end
+
   def decode_block(
-        %Proto.Osm.PrimitiveBlock{
+        %PrimitiveBlock{
           primitivegroup: groups,
-          stringtable: %Proto.Osm.StringTable{s: stringtable}
+          stringtable: %StringTable{s: stringtable}
         } = primitive_block
       ) do
     groups
     |> Enum.flat_map(fn group ->
       decode_group(
-        %Proto.Osm.PrimitiveBlock{
+        %PrimitiveBlock{
           primitive_block
           | stringtable: stringtable |> :array.from_list()
         },
@@ -26,15 +52,15 @@ defmodule PBFParser.Decoder do
     end)
   end
 
-  def decode_group(
-        block,
-        %Proto.Osm.PrimitiveGroup{
-          dense: dense,
-          nodes: nodes,
-          relations: relations,
-          ways: ways
-        }
-      ) do
+  defp decode_group(
+         block,
+         %PrimitiveGroup{
+           dense: dense,
+           nodes: nodes,
+           relations: relations,
+           ways: ways
+         }
+       ) do
     cond do
       dense -> decode_dense(block, dense)
       length(nodes) > 0 -> decode_nodes(block, nodes)
@@ -43,40 +69,29 @@ defmodule PBFParser.Decoder do
     end
   end
 
-  def decompress_block(data) do
-    Proto.Osm.PrimitiveBlock.decode(:zlib.uncompress(data))
-  end
-
-  def decompress_header(data) do
-    Proto.Osm.HeaderBlock.decode(:zlib.uncompress(data))
-  end
-
   defp decode_dense(
          block,
-         %Proto.Osm.DenseNodes{
+         %DenseNodes{
            denseinfo: nil
          } = dense
        ) do
-    decode_dense(block, %Proto.Osm.DenseNodes{
-      dense
-      | denseinfo: @empty_dense_info
-    })
+    decode_dense(block, %DenseNodes{dense | denseinfo: @empty_dense_info})
   end
 
   defp decode_dense(
-         %Proto.Osm.PrimitiveBlock{
+         %PrimitiveBlock{
            date_granularity: date_granularity,
            granularity: granularity,
            lat_offset: lat_offset,
            lon_offset: lon_offset,
            stringtable: stringtable
          },
-         %Proto.Osm.DenseNodes{
+         %DenseNodes{
            id: ids,
            keys_vals: keys_vals,
            lat: lats,
            lon: lons,
-           denseinfo: %Proto.Osm.DenseInfo{
+           denseinfo: %DenseInfo{
              changeset: changesets,
              timestamp: timestamps,
              uid: uids,
@@ -86,15 +101,15 @@ defmodule PBFParser.Decoder do
            }
          }
        ) do
+    values = [
+      ids,
+      lats,
+      lons
+    ]
+
     tags = stringtable |> extract_dense_tags(keys_vals)
 
-    Enum.concat(
-      [
-        ids,
-        lats,
-        lons,
-        tags
-      ],
+    extended_values =
       [
         changesets,
         timestamps,
@@ -103,8 +118,14 @@ defmodule PBFParser.Decoder do
         versions,
         visibles
       ]
-      |> Enum.map(fn set -> set |> extend() end)
-    )
+      |> Stream.map(&extend/1)
+
+    [
+      values,
+      tags,
+      extended_values
+    ]
+    |> Stream.concat()
     |> Stream.zip()
     |> Enum.reduce(
       {[], 0, 0, 0, 0, 0, 0, 0},
@@ -120,12 +141,12 @@ defmodule PBFParser.Decoder do
         user_sid = if user_sid, do: user_sida + user_sid
 
         {[
-           %Data.Node{
+           %PBFParser.Data.Node{
              id: id,
              latitude: 1.0e-9 * (lat_offset + granularity * lat),
              longitude: 1.0e-9 * (lon_offset + granularity * lon),
              tags: tagmap,
-             info: %Data.Info{
+             info: %PBFParser.Data.Info{
                changeset: changeset,
                timestamp: get_date(timestamp, date_granularity),
                uid: uid,
@@ -142,7 +163,7 @@ defmodule PBFParser.Decoder do
   end
 
   defp decode_nodes(
-         %Proto.Osm.PrimitiveBlock{
+         %PrimitiveBlock{
            date_granularity: date_granularity,
            granularity: granularity,
            lat_offset: lat_offset,
@@ -152,7 +173,7 @@ defmodule PBFParser.Decoder do
          nodes
        ) do
     nodes
-    |> Enum.map(fn %Proto.Osm.Node{
+    |> Enum.map(fn %Node{
                      id: id,
                      keys: keys,
                      vals: vals,
@@ -160,7 +181,7 @@ defmodule PBFParser.Decoder do
                      lon: lon,
                      info: info
                    } ->
-      %Data.Node{
+      %PBFParser.Data.Node{
         id: id,
         latitude: 1.0e-9 * (lat_offset + granularity * lat),
         longitude: 1.0e-9 * (lon_offset + granularity * lon),
@@ -171,14 +192,14 @@ defmodule PBFParser.Decoder do
   end
 
   defp decode_relations(
-         %Proto.Osm.PrimitiveBlock{
+         %PrimitiveBlock{
            date_granularity: date_granularity,
            stringtable: stringtable
          },
          relations
        ) do
     relations
-    |> Enum.map(fn %Proto.Osm.Relation{
+    |> Enum.map(fn %Relation{
                      id: id,
                      keys: keys,
                      vals: vals,
@@ -187,7 +208,7 @@ defmodule PBFParser.Decoder do
                      memids: memids,
                      types: types
                    } ->
-      %Data.Relation{
+      %PBFParser.Data.Relation{
         id: id,
         members: extract_members(stringtable, roles_sid, memids, types),
         tags: extract_tags(stringtable, keys, vals),
@@ -197,21 +218,21 @@ defmodule PBFParser.Decoder do
   end
 
   defp decode_ways(
-         %Proto.Osm.PrimitiveBlock{
+         %PrimitiveBlock{
            date_granularity: date_granularity,
            stringtable: stringtable
          },
          ways
        ) do
     ways
-    |> Enum.map(fn %Proto.Osm.Way{
+    |> Enum.map(fn %Way{
                      id: id,
                      keys: keys,
                      vals: vals,
                      refs: refs,
                      info: info
                    } ->
-      %Data.Way{
+      %PBFParser.Data.Way{
         id: id,
         tags: extract_tags(stringtable, keys, vals),
         refs: extract_refs(refs),
@@ -253,7 +274,7 @@ defmodule PBFParser.Decoder do
   defp extract_info(
          stringtable,
          date_granularity,
-         %Proto.Osm.Info{
+         %Info{
            changeset: changeset,
            timestamp: timestamp,
            uid: uid,
@@ -262,7 +283,7 @@ defmodule PBFParser.Decoder do
            visible: visible
          }
        ) do
-    %Data.Info{
+    %PBFParser.Data.Info{
       changeset: changeset,
       timestamp: get_date(timestamp, date_granularity),
       uid: uid,
@@ -285,7 +306,7 @@ defmodule PBFParser.Decoder do
         memid = memid + memida
 
         {[
-           %Data.Member{
+           %PBFParser.Data.Member{
              id: memid,
              type: type,
              role: :array.get(roles_sid, strintable)
@@ -312,7 +333,11 @@ defmodule PBFParser.Decoder do
   end
 
   defp extract_tags(stringtable, keys, vals) do
-    Stream.zip(keys, vals)
+    [
+      keys,
+      vals
+    ]
+    |> Stream.zip()
     |> Stream.map(fn {k, v} ->
       key = :array.get(k, stringtable)
       value = :array.get(v, stringtable)
