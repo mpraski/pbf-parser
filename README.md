@@ -67,7 +67,7 @@ iex(1)> PBFParser.decode_decode_block(...)
 
 #### Pipeline Uusing Stream:
 
-```
+```elixir
 PBFParser.stream("test.osm.pbf")
 |> Stream.drop(1)
 |> Stream.map(&PBFParser.decompress_block/1)
@@ -78,7 +78,7 @@ PBFParser.stream("test.osm.pbf")
 
 #### Pipeline using Flow:
 
-```
+```elixir
 PBFParser.stream("test.osm.pbf")
 |> Stream.drop(1)
 |> Stream.take(1_000)
