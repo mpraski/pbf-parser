@@ -24,7 +24,7 @@ defmodule PBFParser.MixProject do
   defp deps do
     [
       {:exprotobuf, "~> 1.2"},
-      {:flow, "~> 0.14.2"},
+      {:ex_doc, ">= 0.0.0", only: :dev},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
     ]
   end
