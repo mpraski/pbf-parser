@@ -98,6 +98,13 @@ defmodule PBFParser.Decoder do
     decode_dense(block, %DenseNodes{dense | denseinfo: @empty_dense_info})
   end
 
+  #################################################
+  # Decode densely encoded nodes. This            #
+  # requires reducing a collection of lists       #
+  # from DenseNodes struct, as well as extracting #
+  # tags for each node (lazily).                  #
+  #################################################
+
   defp decode_dense(
          %PrimitiveBlock{
            date_granularity: date_granularity,
@@ -121,13 +128,14 @@ defmodule PBFParser.Decoder do
            }
          }
        ) do
+    tags = stringtable |> extract_dense_tags(keys_vals)
+
     values = [
       ids,
       lats,
-      lons
+      lons,
+      tags
     ]
-
-    tags = stringtable |> extract_dense_tags(keys_vals)
 
     extended_values =
       [
@@ -142,7 +150,6 @@ defmodule PBFParser.Decoder do
 
     [
       values,
-      tags,
       extended_values
     ]
     |> Stream.concat()
