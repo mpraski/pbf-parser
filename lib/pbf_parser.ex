@@ -52,6 +52,27 @@ defmodule PBFParser do
   entities. Those are extracted along with accompanying metadata.
 
   Returns a list containing Data.Node, Data.Relation and Data.Way structs.
+
+  ## Example
+      iex(1)> PBFParser.decode_decode_block(...)
+      [
+          ...
+          %PBFParser.Data.Node{
+          id: 219219898,
+          info: %PBFParser.Data.Info{
+            changeset: 0,
+            timestamp: #DateTime<2008-01-11 23:29:41.000Z>,
+            uid: 0,
+            user: "",
+            version: 1,
+            visible: nil
+          },
+          latitude: 14.860650000000001,
+          longitude: -83.43016,
+          tags: %{"created_by" => "JOSM"}
+        },
+        ...
+      ]
   """
   defdelegate decode_block(block), to: PBFParser.Decoder
 end

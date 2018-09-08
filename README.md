@@ -23,21 +23,21 @@ Afterwards run `mix deps.get` in your command line to fetch the dependency.
 
 ## Usage
 
-#### '''PBFParser.stream/1'''
+#### `PBFParser.stream/1`
 
-Opens .pbf file specified by given path and return a '''Stream''' yielding zlib encoded data of consecutive [Blobs](https://wiki.openstreetmap.org/wiki/PBF_Format#File_format). First emitted chunk of data should represent a '''HeaderBlock''', all those coming after should be decoded as '''PrimitiveBlock'''s.
+Opens .pbf file specified by given path and return a `Stream` yielding zlib encoded data of consecutive [Blobs](https://wiki.openstreetmap.org/wiki/PBF_Format#File_format). First emitted chunk of data should represent a `HeaderBlock`, all those coming after should be decoded as `PrimitiveBlock`s.
 
-#### '''PBFParser.decompress_header/1'''
+#### `PBFParser.decompress_header/1`
 
 Inflates the zlib encoded data and returns a [HeaderBlock](https://wiki.openstreetmap.org/wiki/PBF_Format#Encoding_OSM_entities_into_fileblocks).
 
-#### '''PBFParser.decompress_block/1'''
+#### `PBFParser.decompress_block/1`
 
 Inflates the zlib encoded data and returns a [PrimitiveBlock](https://wiki.openstreetmap.org/wiki/PBF_Format#Definition_of_OSMData_fileblock).
 
-#### '''PBFParser.decode_block/1''
+#### `PBFParser.decode_block/1`
 
-Decoded a given '''PrimitiveBlock''' into a list of entities it contains. Each entity is either a '''PBFParser.Data.Node''', a '''PBFParser.Data.Relation''' or '''PBFParser.Data.Way'''. See examples below for details.
+Decoded a given `PrimitiveBlock` into a list of entities it contains. Each entity is either a `PBFParser.Data.Node`, a `PBFParser.Data.Relation` or `PBFParser.Data.Way`. See examples below for details.
 
 ## Examples
 
