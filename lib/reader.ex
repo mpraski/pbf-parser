@@ -6,6 +6,7 @@ defmodule PBFParser.Reader do
 
   alias PBFParser.Proto.FileFormat.{Blob, BlobHeader}
 
+  @spec stream(String.t()) :: Enumerable.t()
   def stream(path) do
     Stream.resource(fn -> open_file(path) end, &read_next/1, &close_file/1)
   end
