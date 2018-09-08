@@ -1,7 +1,6 @@
 defmodule PBFParser do
   @moduledoc """
-  Elixir parser and decoder for OpenStreetMap PBF format described in PBF file specification.
-  It provides functions one can use to build their own decoder flow of .pbf files, as seen in examples.
+  Elixir parser and decoder for OpenStreetMap PBF format described in [PBF file specification](https://wiki.openstreetmap.org/wiki/PBF_Format#Encoding_OSM_entities_into_fileblocks). This library provides a collection of functions that one can use to build their own decoder flow of .pbf files, as seen in examples.
 
   ## Examples
 
