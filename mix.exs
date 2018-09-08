@@ -10,6 +10,7 @@ defmodule PBFParser.MixProject do
       description: description(),
       package: package(),
       deps: deps(),
+      docs: docs(),
       name: "PBF Parser",
       source_url: "https://github.com/mpraski/pbf-parser"
     ]
@@ -24,16 +25,23 @@ defmodule PBFParser.MixProject do
   defp deps do
     [
       {:exprotobuf, "~> 1.2"},
-      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
     ]
   end
 
-  defp description() do
+  defp description do
     "Elixir parser and decoder for OpenStreetMap PBF format described in PBF file specification."
   end
 
-  defp package() do
+  defp docs do
+    [
+      main: "PBFParser",
+      extras: ["README.md"]
+    ]
+  end
+
+  defp package do
     [
       files: ~w(lib config .formatter.exs mix.exs README* LICENSE*
                 CHANGELOG*),

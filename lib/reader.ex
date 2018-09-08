@@ -1,8 +1,5 @@
 defmodule PBFParser.Reader do
-  @moduledoc """
-  This module defines the stream/1 function which returns a Stream of
-  zlib compressed data.
-  """
+  @moduledoc false
 
   alias PBFParser.Proto.FileFormat.{Blob, BlobHeader}
 

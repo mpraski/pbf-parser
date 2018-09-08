@@ -1,8 +1,5 @@
 defmodule PBFParser.Decoder do
-  @moduledoc """
-  This module provides function for decoding block data into appropriate
-  structs representing OSM entities (Nodes, relations and ways).
-  """
+  @moduledoc false
 
   alias PBFParser.Proto.OsmFormat.{
     DenseInfo,
@@ -26,33 +23,16 @@ defmodule PBFParser.Decoder do
     visible: []
   }
 
-  @doc """
-  Decompresses zlib encoded block data (as obtained from Reader.stream/1).
-
-  Returns PrimitiveBlock, a struct generated directly from PBF protobuf specification.
-  """
   @spec decompress_block(iodata()) :: PrimitiveBlock.t()
   def decompress_block(data) do
     PrimitiveBlock.decode(:zlib.uncompress(data))
   end
 
-  @doc """
-  Decompresses zlib encoded blockheader data (as obtained from Reader.stream/1).
-
-  Returns HeaderBlock, a struct generated directly from PBF protobuf specification.
-  """
   @spec decompress_header(iodata()) :: HeaderBlock.t()
   def decompress_header(data) do
     HeaderBlock.decode(:zlib.uncompress(data))
   end
 
-  @doc """
-  Decodes the raw PrimitiveBlock (as obtained from Decoder.decompress_block/1) into a more usable format.
-  Each block usually contains around 8000 densely packed node entities and a number of relation and way
-  entities. Those are extracted along with accompanying metadata.
-
-  Returns a list containing Data.Node, Data.Relation and Data.Way structs.
-  """
   @spec decode_block(PrimitiveBlock.t()) :: [Data.Node.t() | Data.Relation.t() | Data.Way.t()]
   def decode_block(
         %PrimitiveBlock{
