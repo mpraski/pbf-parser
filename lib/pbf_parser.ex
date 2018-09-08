@@ -7,21 +7,21 @@ defmodule PBFParser do
 
   ## Examples:
   #### With Stream
-      Reader.stream("test.osm.pbf")
+      PBFParser.stream("test.osm.pbf")
         |> Stream.drop(1)
-        |> Stream.map(&Decoder.decompress_block/1)
-        |> Stream.map(&Decoder.decode_block/1)
+        |> Stream.map(&PBFParser.decompress_block/1)
+        |> Stream.map(&PBFParser.decode_block/1)
         |> Stream.each(&IO.inspect/1)
         |> Stream.run()
   #### With Flow
-      Reader.stream("test.osm.pbf")
+      PBFParser.stream("test.osm.pbf")
         |> Stream.drop(1)
         |> Stream.take(1_000)
         |> Flow.from_enumerable(max_demand: 50)
         |> Flow.partition(max_demand: 5, stages: 5)
-        |> Flow.map(&Decoder.decompress_block/1)
+        |> Flow.map(&PBFParser.decompress_block/1)
         |> Flow.partition(max_demand: 5, stages: 10)
-        |> Flow.map(&Decoder.decode_block/1)
+        |> Flow.map(&PBFParser.decode_block/1)
         |> Flow.partition(window: Flow.Window.count(20))
         |> Flow.reduce(fn -> [] end, fn batch, total -> [batch | total] end)
         |> Flow.emit(:state)
