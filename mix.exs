@@ -4,8 +4,8 @@ defmodule PBFParser.MixProject do
   def project do
     [
       app: :pbf_parser,
-      version: "0.1.1",
-      elixir: ">= 1.7.0",
+      version: "0.1.2",
+      elixir: ">= 1.6.0",
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
